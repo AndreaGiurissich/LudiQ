@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cube Tournament — Host</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ===================== HEADER ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="cube-glyph" aria-hidden="true"></span>
+      <div>
+        <h1>Cube Tournament</h1>
+        <p class="sub" data-i18n="subtitle">Host console · controller v0.5</p>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- selettore lingua: due bandierine SVG (offline, no font esterni) -->
+      <div class="lang-toggle" id="langToggle" title="Language / Lingua">
+        <span class="flag" data-lang="en" title="English">
+          <svg class="flag-svg" viewBox="0 0 60 42" xmlns="http://www.w3.org/2000/svg">
+            <clipPath id="ukclip"><rect width="60" height="42"/></clipPath>
+            <g clip-path="url(#ukclip)">
+              <rect width="60" height="42" fill="#012169"/>
+              <path d="M0,0 L60,42 M60,0 L0,42" stroke="#fff" stroke-width="8"/>
+              <path d="M0,0 L60,42 M60,0 L0,42" stroke="#C8102E" stroke-width="4"/>
+              <path d="M30,0 V42 M0,21 H60" stroke="#fff" stroke-width="12"/>
+              <path d="M30,0 V42 M0,21 H60" stroke="#C8102E" stroke-width="7"/>
+            </g>
+          </svg>
+        </span>
+        <span class="flag" data-lang="it" title="Italiano">
+          <svg class="flag-svg" viewBox="0 0 60 42" xmlns="http://www.w3.org/2000/svg">
+            <rect width="20" height="42" fill="#009246"/>
+            <rect x="20" width="20" height="42" fill="#fff"/>
+            <rect x="40" width="20" height="42" fill="#ce2b37"/>
+          </svg>
+        </span>
+      </div>
+
+      <div class="cube-state" id="cubeState" data-online="false">
+        <span class="dot"></span>
+        <div class="cube-state-txt">
+          <strong id="cubeStateLabel">Cube offline</strong>
+          <small id="cubeStateMeta">waiting for connection…</small>
+        </div>
+        <button class="btn ghost small" id="btnBeep" data-i18n-title="beepTitle" title="Make the cube beep">beep</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ===================== COLONNA SINISTRA ===================== -->
+    <section class="side">
+      <!-- SETUP TORNEO -->
+      <div class="panel" id="setupPanel">
+        <h2 class="panel-title" data-i18n="newTournament">New tournament</h2>
+
+        <label class="field">
+          <span data-i18n="participants">Participants</span>
+          <div class="seg" id="segSize">
+            <button data-size="4" class="active">4</button>
+            <button data-size="8">8</button>
+            <button data-size="16">16</button>
+            <button data-size="32">32</button>
+          </div>
+        </label>
+
+        <label class="field">
+          <span data-i18n="game">Game</span>
+          <div class="seg games" id="segGame">
+            <button data-game="pokemon" class="active">Pokémon</button>
+            <button data-game="yugioh">Yu-Gi-Oh!</button>
+            <button data-game="scacchi" data-i18n="gameChess">Chess</button>
+          </div>
+        </label>
+
+        <label class="field">
+          <span data-i18n="timeLimit">Time limit per match</span>
+          <div class="time-row">
+            <input type="range" id="timeLimit" min="5" max="90" step="5" value="50" />
+            <output id="timeLimitOut" class="mono">50′</output>
+          </div>
+        </label>
+
+        <div class="field chess-only" id="chessFmtField" hidden>
+          <span data-i18n="chessFormat">Chess format</span>
+          <select id="chessFormat" class="select">
+            <option value="CLASSICAL" data-i18n="fmtClassical">Classical — 90′/40 +30′</option>
+            <option value="RAPID" data-i18n="fmtRapid">Rapid — custom time</option>
+            <option value="BLITZ" selected data-i18n="fmtBlitz">Blitz — 3′ + 2s</option>
+          </select>
+        </div>
+
+        <label class="field chess-only" id="rapidMinField" hidden>
+          <span data-i18n="rapidMinutes">Rapid minutes (per player)</span>
+          <div class="time-row">
+            <input type="range" id="rapidMin" min="5" max="60" step="5" value="15" />
+            <output id="rapidMinOut" class="mono">15′</output>
+          </div>
+        </label>
+
+        <button class="btn primary block" id="btnCreate" data-i18n="createBracket">Create bracket</button>
+        <button class="btn ghost block" id="btnReset" data-i18n="endTournament" hidden>End tournament</button>
+      </div>
+
+      <!-- MATCH IN CORSO -->
+      <div class="panel live-panel" id="livePanel" hidden>
+        <h2 class="panel-title" data-i18n="matchOnCube">Match on the cube</h2>
+        <div class="live-card" id="liveCard">
+          <div class="live-player" data-slot="1">
+            <span class="src-dot" data-i18n-title="playerSource" title="player source"></span>
+            <span class="name">—</span>
+            <span class="uid mono"></span>
+          </div>
+          <div class="live-vs">vs</div>
+          <div class="live-player" data-slot="2">
+            <span class="src-dot" data-i18n-title="playerSource" title="player source"></span>
+            <span class="name">—</span>
+            <span class="uid mono"></span>
+          </div>
+        </div>
+        <p class="live-hint" id="liveHint">No match selected.</p>
+        <button class="btn primary block" id="btnStartCube" data-i18n="startOnCube" disabled>Start on cube</button>
+      </div>
+
+      <!-- LOG -->
+      <div class="panel">
+        <h2 class="panel-title" data-i18n="events">Events</h2>
+        <ul class="log" id="log"></ul>
+      </div>
+    </section>
+
+    <!-- ===================== TABELLONE (l'eroe) ===================== -->
+    <section class="bracket-wrap panel">
+      <div class="bracket-head">
+        <h2 class="panel-title" data-i18n="bracket">Bracket</h2>
+        <span class="bracket-tag mono" id="bracketTag">—</span>
+      </div>
+      <div class="bracket-scroll">
+        <div class="bracket" id="bracket">
+          <div class="empty-bracket" id="emptyBracket">
+            Create a tournament to draw the bracket.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
